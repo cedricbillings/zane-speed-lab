@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zane's Speed Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon: #00f5ff;
+    --hot: #ff6b35;
+    --gold: #ffd700;
+    --green: #39ff14;
+    --purple: #a78bfa;
+    --pink: #ff6b9d;
+    --teal: #67e8f9;
+    --dark: #0a0e1a;
+    --card: #111827;
+    --card2: #0d1520;
+    --border: #1e2d45;
+    --text: #cdd9f0;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--dark); color:var(--text); font-family:'Exo 2',sans-serif; min-height:100vh; overflow-x:hidden; }
+  body::before {
+    content:''; position:fixed; top:0;left:0;right:0;bottom:0;
+    background: radial-gradient(ellipse at 15% 10%,rgba(0,245,255,0.07) 0%,transparent 50%),
+                radial-gradient(ellipse at 85% 90%,rgba(255,107,53,0.07) 0%,transparent 50%);
+    pointer-events:none; z-index:0;
+  }
+  .grid-bg {
+    position:fixed; top:0;left:0;right:0;bottom:0;
+    background-image: linear-gradient(rgba(0,245,255,0.035) 1px,transparent 1px),
+                      linear-gradient(90deg,rgba(0,245,255,0.035) 1px,transparent 1px);
+    background-size:40px 40px; pointer-events:none; z-index:0;
+  }
+  .container { max-width:960px; margin:0 auto; padding:20px; position:relative; z-index:1; }
+
+  /* NAV TABS */
+  .tab-nav {
+    display:flex; gap:4px; margin-bottom:24px;
+    background:var(--card2); border:1px solid var(--border); border-radius:12px; padding:6px;
+  }
+  .tab-btn {
+    flex:1; padding:10px 8px; border:none; background:transparent; color:var(--text);
+    font-family:'Orbitron',monospace; font-size:9px; letter-spacing:1.5px; cursor:pointer;
+    border-radius:8px; transition:all 0.2s; opacity:0.5;
+  }
+  .tab-btn.active { background:var(--card); opacity:1; color:#fff; box-shadow:0 2px 12px rgba(0,0,0,0.4); }
+  .tab-btn:hover:not(.active) { opacity:0.75; }
+
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  /* HERO */
+  .hero { text-align:center; padding:32px 20px 24px; }
+  .hero-tag { font-family:'Orbitron',monospace; font-size:9px; letter-spacing:6px; color:var(--neon); opacity:0.6; margin-bottom:8px; }
+  .hero h1 {
+    font-family:'Orbitron',monospace; font-size:clamp(28px,6vw,58px); font-weight:900; line-height:1;
+    background:linear-gradient(135deg,var(--neon) 0%,#fff 50%,var(--hot) 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    margin-bottom:6px; animation:pulse-glow 3s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%,100% { filter:drop-shadow(0 0 18px rgba(0,245,255,0.3)); }
+    50% { filter:drop-shadow(0 0 36px rgba(0,245,255,0.6)); }
+  }
+  .hero-sub { font-size:12px; opacity:0.45; letter-spacing:2px; }
+
+  /* PLAYER CARD */
+  .player-card {
+    background:linear-gradient(135deg,#0d1b2a,#1a2744);
+    border:1px solid var(--neon); border-radius:16px; padding:20px 24px;
+    margin-bottom:28px; display:grid; grid-template-columns:auto 1fr auto;
+    gap:20px; align-items:center;
+    box-shadow:0 0 40px rgba(0,245,255,0.08),inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+  .player-avatar {
+    width:64px; height:64px; border-radius:50%;
+    background:linear-gradient(135deg,var(--neon),#0066cc);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Orbitron',monospace; font-size:24px; font-weight:900; color:#fff;
+    border:2px solid var(--neon); box-shadow:0 0 20px rgba(0,245,255,0.3); flex-shrink:0;
+  }
+  .player-info h2 { font-family:'Orbitron',monospace; font-size:18px; font-weight:700; color:#fff; margin-bottom:3px; }
+  .player-info p { font-size:11px; opacity:0.45; margin-bottom:8px; }
+  .sport-tags { display:flex; gap:6px; flex-wrap:wrap; }
+  .sport-tag {
+    background:rgba(0,245,255,0.1); border:1px solid rgba(0,245,255,0.3);
+    border-radius:20px; padding:2px 10px; font-size:9px; letter-spacing:1px;
+    color:var(--neon); font-family:'Orbitron',monospace;
+  }
+  .level-badge { text-align:center; flex-shrink:0; }
+  .level-circle {
+    width:60px; height:60px; border-radius:50%;
+    background:linear-gradient(135deg,var(--hot),#ff3a00);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    box-shadow:0 0 20px rgba(255,107,53,0.4); margin-bottom:4px;
+  }
+  .level-circle span:first-child { font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:#fff; line-height:1; }
+  .level-circle span:last-child { font-size:7px; letter-spacing:1px; color:#fff; opacity:0.8; }
+  .level-badge p { font-size:8px; opacity:0.4; letter-spacing:1px; font-family:'Orbitron',monospace; }
+
+  /* SECTION HEADER */
+  .section-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; margin-top:28px; }
+  .section-header h2 { font-family:'Orbitron',monospace; font-size:11px; letter-spacing:3px; color:#fff; text-transform:uppercase; white-space:nowrap; }
+  .section-line { flex:1; height:1px; background:linear-gradient(90deg,var(--border),transparent); }
+  .section-icon { font-size:16px; }
+
+  /* MISSION BRIEF */
+  .mission-brief {
+    background:var(--card); border:1px solid var(--border); border-left:3px solid var(--hot);
+    border-radius:12px; padding:18px 22px; margin-bottom:28px;
+  }
+  .mission-brief h3 { font-family:'Orbitron',monospace; font-size:10px; letter-spacing:3px; color:var(--hot); margin-bottom:10px; }
+  .mission-brief p { font-size:13px; line-height:1.7; opacity:0.8; }
+  .stat-flags { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .stat-flag { background:rgba(255,107,53,0.08); border:1px solid rgba(255,107,53,0.25); border-radius:8px; padding:7px 11px; font-size:11px; }
+  .stat-flag .label { color:var(--hot); font-family:'Orbitron',monospace; font-size:8px; letter-spacing:1px; display:block; margin-bottom:2px; }
+
+  /* WEEK GRID */
+  .week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:20px; }
+  .day-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 6px; text-align:center; }
+  .day-card.active { border-color:var(--neon); box-shadow:0 0 14px rgba(0,245,255,0.1); }
+  .day-card.rest { opacity:0.32; }
+  .day-name { font-family:'Orbitron',monospace; font-size:8px; letter-spacing:1px; color:var(--neon); margin-bottom:5px; }
+  .day-card.rest .day-name { color:var(--text); }
+  .day-type { font-size:10px; font-weight:600; color:#fff; margin-bottom:3px; line-height:1.3; }
+  .day-duration { font-size:9px; opacity:0.4; }
+
+  /* PHASE CARDS */
+  .phase-grid { display:grid; gap:12px; }
+  .phase-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; transition:transform 0.2s; }
+  .phase-card:hover { transform:translateY(-2px); }
+  .phase-header { padding:14px 18px; display:flex; align-items:center; gap:12px; cursor:pointer; user-select:none; }
+  .phase-num { font-family:'Orbitron',monospace; font-size:24px; font-weight:900; opacity:0.1; flex-shrink:0; width:32px; }
+  .phase-meta { flex:1; }
+  .phase-meta h3 { font-family:'Orbitron',monospace; font-size:12px; color:#fff; margin-bottom:2px; }
+  .phase-meta p { font-size:10px; opacity:0.42; letter-spacing:1px; }
+  .phase-badge { font-size:8px; font-family:'Orbitron',monospace; letter-spacing:1px; padding:3px 9px; border-radius:20px; flex-shrink:0; }
+  .phase-toggle { font-size:11px; opacity:0.35; flex-shrink:0; transition:transform 0.25s; }
+  .phase-toggle.open { transform:rotate(180deg); }
+  .phase-body { display:none; border-top:1px solid var(--border); }
+  .phase-body.open { display:block; }
+
+  .drill-table { width:100%; border-collapse:collapse; }
+  .drill-table th { font-family:'Orbitron',monospace; font-size:8px; letter-spacing:2px; padding:9px 18px; text-align:left; opacity:0.32; background:rgba(255,255,255,0.02); border-bottom:1px solid var(--border); }
+  .drill-table td { padding:11px 18px; font-size:12px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; line-height:1.5; }
+  .drill-table tr:last-child td { border-bottom:none; }
+  .drill-table tr:hover td { background:rgba(255,255,255,0.02); }
+  .drill-name { font-weight:600; color:#fff; font-size:12px; }
+  .drill-why { font-size:11px; opacity:0.48; margin-top:3px; }
+  .new-badge { display:inline-block; background:rgba(57,255,20,0.15); border:1px solid rgba(57,255,20,0.4); color:var(--green); font-family:'Orbitron',monospace; font-size:7px; letter-spacing:1px; padding:1px 6px; border-radius:10px; margin-left:6px; vertical-align:middle; }
+  .xp-pill { font-family:'Orbitron',monospace; font-size:9px; padding:3px 8px; border-radius:20px; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.3); color:var(--gold); white-space:nowrap; }
+
+  /* Phase color themes */
+  .phase-warmup .phase-header { border-left:3px solid var(--pink); } .phase-warmup .phase-num { color:var(--pink); } .phase-warmup .phase-badge { background:rgba(255,107,157,0.1); border:1px solid rgba(255,107,157,0.3); color:var(--pink); }
+  .phase-flex .phase-header { border-left:3px solid var(--purple); } .phase-flex .phase-num { color:var(--purple); } .phase-flex .phase-badge { background:rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.3); color:var(--purple); }
+  .phase-speed .phase-header { border-left:3px solid var(--neon); } .phase-speed .phase-num { color:var(--neon); } .phase-speed .phase-badge { background:rgba(0,245,255,0.1); border:1px solid rgba(0,245,255,0.3); color:var(--neon); }
+  .phase-agility .phase-header { border-left:3px solid var(--hot); } .phase-agility .phase-num { color:var(--hot); } .phase-agility .phase-badge { background:rgba(255,107,53,0.1); border:1px solid rgba(255,107,53,0.3); color:var(--hot); }
+  .phase-strength .phase-header { border-left:3px solid var(--green); } .phase-strength .phase-num { color:var(--green); } .phase-strength .phase-badge { background:rgba(57,255,20,0.1); border:1px solid rgba(57,255,20,0.3); color:var(--green); }
+  .phase-cooldown .phase-header { border-left:3px solid var(--teal); } .phase-cooldown .phase-num { color:var(--teal); } .phase-cooldown .phase-badge { background:rgba(103,232,249,0.1); border:1px solid rgba(103,232,249,0.3); color:var(--teal); }
+
+  .coach-note { background:rgba(255,107,53,0.05); border:1px solid rgba(255,107,53,0.2); border-radius:10px; padding:14px 18px; margin:10px 18px 14px; font-size:12px; line-height:1.7; }
+  .coach-note strong { color:var(--hot); font-family:'Orbitron',monospace; font-size:9px; letter-spacing:2px; display:block; margin-bottom:6px; }
+
+  /* TRACKER TAB */
+  .tracker-header {
+    background:linear-gradient(135deg,#0d1b2a,#1a2744);
+    border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:20px;
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; text-align:center;
+  }
+  .tracker-stat-val { font-family:'Orbitron',monospace; font-size:28px; font-weight:900; line-height:1; margin-bottom:4px; }
+  .tracker-stat-lbl { font-size:10px; opacity:0.45; letter-spacing:1px; font-family:'Orbitron',monospace; }
+
+  .log-session-card {
+    background:var(--card); border:1px solid var(--border); border-radius:14px; padding:22px; margin-bottom:20px;
+  }
+  .log-session-card h3 { font-family:'Orbitron',monospace; font-size:11px; letter-spacing:2px; color:var(--neon); margin-bottom:16px; }
+
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .form-group { display:flex; flex-direction:column; gap:5px; }
+  .form-group label { font-size:10px; opacity:0.5; font-family:'Orbitron',monospace; letter-spacing:1px; }
+  .form-group input, .form-group select, .form-group textarea {
+    background:var(--card2); border:1px solid var(--border); border-radius:8px;
+    color:var(--text); font-family:'Exo 2',sans-serif; font-size:13px; padding:9px 12px;
+    outline:none; transition:border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--neon); }
+  .form-group textarea { resize:vertical; min-height:70px; }
+  .form-group select option { background:var(--card); }
+
+  .module-checks { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+  .module-check {
+    background:var(--card2); border:1px solid var(--border); border-radius:8px;
+    padding:10px 12px; cursor:pointer; transition:all 0.2s; user-select:none;
+    display:flex; align-items:center; gap:8px;
+  }
+  .module-check.checked { border-color:var(--green); background:rgba(57,255,20,0.07); }
+  .module-check .check-icon { font-size:14px; flex-shrink:0; }
+  .module-check .check-label { font-size:11px; color:#fff; }
+
+  .rating-row { display:flex; gap:8px; margin-bottom:14px; }
+  .rating-btn {
+    flex:1; padding:8px; border:1px solid var(--border); border-radius:8px;
+    background:var(--card2); color:var(--text); font-family:'Orbitron',monospace;
+    font-size:9px; letter-spacing:1px; cursor:pointer; transition:all 0.2s; text-align:center;
+  }
+  .rating-btn.selected-1 { border-color:#ff4444; background:rgba(255,68,68,0.1); color:#ff4444; }
+  .rating-btn.selected-2 { border-color:var(--hot); background:rgba(255,107,53,0.1); color:var(--hot); }
+  .rating-btn.selected-3 { border-color:var(--gold); background:rgba(255,215,0,0.1); color:var(--gold); }
+  .rating-btn.selected-4 { border-color:var(--neon); background:rgba(0,245,255,0.1); color:var(--neon); }
+  .rating-btn.selected-5 { border-color:var(--green); background:rgba(57,255,20,0.1); color:var(--green); }
+
+  .save-btn {
+    width:100%; padding:13px; background:linear-gradient(135deg,var(--neon),#0088aa);
+    border:none; border-radius:10px; color:#000; font-family:'Orbitron',monospace;
+    font-size:11px; letter-spacing:2px; font-weight:700; cursor:pointer; transition:all 0.2s;
+  }
+  .save-btn:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(0,245,255,0.3); }
+  .save-btn:active { transform:translateY(0); }
+
+  /* SESSION LOG LIST */
+  .sessions-list { display:grid; gap:10px; }
+  .session-entry {
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:16px 18px; display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:start;
+  }
+  .session-date-block { text-align:center; }
+  .session-date-day { font-family:'Orbitron',monospace; font-size:22px; font-weight:900; color:#fff; line-height:1; }
+  .session-date-month { font-family:'Orbitron',monospace; font-size:9px; opacity:0.4; letter-spacing:1px; }
+  .session-type-tag { font-family:'Orbitron',monospace; font-size:9px; letter-spacing:1px; padding:2px 9px; border-radius:20px; margin-bottom:5px; display:inline-block; }
+  .session-modules { font-size:11px; opacity:0.5; }
+  .session-notes-text { font-size:11px; opacity:0.55; margin-top:4px; font-style:italic; }
+  .session-rating { font-size:22px; flex-shrink:0; }
+  .session-xp { font-family:'Orbitron',monospace; font-size:10px; color:var(--gold); margin-top:4px; }
+  .session-pr-row { display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; }
+  .session-pr { background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.25); border-radius:6px; padding:2px 8px; font-size:10px; color:var(--gold); }
+
+  .delete-btn { background:none; border:none; color:rgba(255,255,255,0.15); cursor:pointer; font-size:14px; padding:2px 4px; transition:color 0.2s; margin-left:4px; }
+  .delete-btn:hover { color:#ff4444; }
+
+  /* PR TRACKER TAB */
+  .pr-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:20px; }
+  .pr-card {
+    background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px;
+    position:relative; overflow:hidden;
+  }
+  .pr-card::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; }
+  .pr-card.neon::before { background:var(--neon); }
+  .pr-card.hot::before { background:var(--hot); }
+  .pr-card.gold::before { background:var(--gold); }
+  .pr-card.green::before { background:var(--green); }
+  .pr-card.purple::before { background:var(--purple); }
+  .pr-label { font-family:'Orbitron',monospace; font-size:9px; letter-spacing:1px; opacity:0.45; margin-bottom:6px; }
+  .pr-value { font-family:'Orbitron',monospace; font-size:28px; font-weight:900; color:#fff; line-height:1; margin-bottom:4px; }
+  .pr-unit { font-size:12px; opacity:0.4; }
+  .pr-date { font-size:10px; opacity:0.35; margin-bottom:10px; }
+  .pr-input-row { display:flex; gap:6px; align-items:center; }
+  .pr-input { flex:1; background:var(--card2); border:1px solid var(--border); border-radius:6px; color:#fff; font-family:'Exo 2',sans-serif; font-size:13px; padding:7px 10px; outline:none; }
+  .pr-input:focus { border-color:var(--neon); }
+  .pr-save { background:rgba(0,245,255,0.15); border:1px solid rgba(0,245,255,0.3); border-radius:6px; color:var(--neon); font-family:'Orbitron',monospace; font-size:8px; letter-spacing:1px; padding:7px 10px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+  .pr-save:hover { background:rgba(0,245,255,0.25); }
+
+  .pr-history { margin-top:10px; }
+  .pr-history-row { display:flex; justify-content:space-between; font-size:11px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.04); opacity:0.55; }
+  .pr-history-row:last-child { border:none; }
+
+  /* ACHIEVEMENTS TAB */
+  .achievement-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
+  .achievement {
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:14px; display:flex; align-items:center; gap:10px; transition:all 0.2s; cursor:pointer;
+  }
+  .achievement.unlocked { border-color:var(--gold); background:rgba(255,215,0,0.04); }
+  .achievement-icon { font-size:26px; flex-shrink:0; filter:grayscale(1); opacity:0.3; transition:all 0.3s; }
+  .achievement.unlocked .achievement-icon { filter:none; opacity:1; }
+  .achievement-name { font-size:12px; font-weight:600; color:#fff; margin-bottom:2px; }
+  .achievement-desc { font-size:10px; opacity:0.42; }
+  .achievement-unlocked-date { font-size:9px; color:var(--gold); margin-top:3px; font-family:'Orbitron',monospace; }
+
+  /* PROGRESSION */
+  .week-block { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 18px; margin-bottom:10px; }
+  .week-block-label { font-family:'Orbitron',monospace; font-size:10px; letter-spacing:2px; margin-bottom:5px; }
+  .week-block p { font-size:12px; opacity:0.72; line-height:1.65; }
+  .prog-bar-wrap { margin-top:10px; }
+  .prog-label { display:flex; justify-content:space-between; font-size:9px; opacity:0.38; margin-bottom:3px; font-family:'Orbitron',monospace; letter-spacing:1px; }
+  .prog-bar { height:5px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden; }
+  .prog-fill { height:100%; border-radius:3px; animation:fill-in 1.5s ease-out forwards; }
+  @keyframes fill-in { from { width:0; } }
+
+  .empty-state { text-align:center; padding:48px 20px; opacity:0.35; }
+  .empty-state .empty-icon { font-size:40px; margin-bottom:12px; }
+  .empty-state p { font-family:'Orbitron',monospace; font-size:11px; letter-spacing:2px; }
+
+  .toast {
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px);
+    background:var(--green); color:#000; font-family:'Orbitron',monospace; font-size:11px; letter-spacing:2px;
+    padding:12px 24px; border-radius:30px; transition:transform 0.3s; z-index:999;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  @media(max-width:600px) {
+    .player-card { grid-template-columns:auto 1fr; } .level-badge { display:none; }
+    .week-grid { grid-template-columns:repeat(4,1fr); }
+    .form-row { grid-template-columns:1fr; }
+    .module-checks { grid-template-columns:repeat(2,1fr); }
+    .tab-btn { font-size:7px; padding:8px 4px; }
+    .tracker-header { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-tag">ATHLETE DEVELOPMENT SYSTEM</div>
+    <h1>ZANE'S SPEED LAB</h1>
+    <p class="hero-sub">SEASON 2025 &nbsp;|&nbsp; LEVEL UP YOUR GAME</p>
+  </div>
+
+  <div class="player-card">
+    <div class="player-avatar">Z</div>
+    <div class="player-info">
+      <h2>ZANE</h2>
+      <p>AGE 9 &nbsp;·&nbsp; 4'10" &nbsp;·&nbsp; 115 LBS &nbsp;·&nbsp; MULTI-SPORT ATHLETE</p>
+      <div class="sport-tags">
+        <span class="sport-tag">CATCHER</span>
+        <span class="sport-tag">OUTFIELD</span>
+        <span class="sport-tag">TACKLE FOOTBALL</span>
+      </div>
+    </div>
+    <div class="level-badge">
+      <div class="level-circle" id="levelCircle">
+        <span id="levelNum">1</span>
+        <span>LEVEL</span>
+      </div>
+      <p id="levelTitle">ROOKIE</p>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('plan',this)">PLAN</button>
+    <button class="tab-btn" onclick="switchTab('tracker',this)">LOG SESSION</button>
+    <button class="tab-btn" onclick="switchTab('prs',this)">RECORDS</button>
+    <button class="tab-btn" onclick="switchTab('achievements',this)">BADGES</button>
+    <button class="tab-btn" onclick="switchTab('progress',this)">PROGRESS MAP</button>
+  </div>
+
+  <!-- ═══════════════════ PLAN TAB ═══════════════════ -->
+  <div id="tab-plan" class="tab-panel active">
+
+    <div class="mission-brief">
+      <h3>MISSION BRIEF</h3>
+      <p>Zane is a multi-sport athlete with serious upside. Three physical limiters are addressed before any speed and agility work loads up: weak hip flexors limiting knee drive, tight hips and ankles cutting off range of motion, and a flat-foot stomping pattern costing him ground contact efficiency. Everything in this plan is built around unlocking those first, then stacking speed on top of a solid foundation.</p>
+      <div class="stat-flags">
+        <div class="stat-flag"><span class="label">UNLOCK NEEDED</span>Hip Flexor Strength</div>
+        <div class="stat-flag"><span class="label">UNLOCK NEEDED</span>Hip + Ankle Mobility</div>
+        <div class="stat-flag"><span class="label">UNLOCK NEEDED</span>Foot Strike Pattern</div>
+        <div class="stat-flag"><span class="label">TARGET STAT</span>First Step Quickness</div>
+        <div class="stat-flag"><span class="label">TARGET STAT</span>Lateral Speed</div>
+      </div>
+    </div>
+
+    <div class="section-header"><span class="section-icon">📅</span><h2>Weekly Schedule</h2><div class="section-line"></div></div>
+    <div class="week-grid">
+      <div class="day-card active"><div class="day-name">MON</div><div class="day-type">Speed + Flex</div><div class="day-duration">35–40 min</div></div>
+      <div class="day-card rest"><div class="day-name">TUE</div><div class="day-type">Rest / Sport</div><div class="day-duration">off</div></div>
+      <div class="day-card active"><div class="day-name">WED</div><div class="day-type">Agility + Hips</div><div class="day-duration">35–40 min</div></div>
+      <div class="day-card rest"><div class="day-name">THU</div><div class="day-type">Rest / Sport</div><div class="day-duration">off</div></div>
+      <div class="day-card active"><div class="day-name">FRI</div><div class="day-type">Game Day Prep</div><div class="day-duration">30 min</div></div>
+      <div class="day-card rest"><div class="day-name">SAT</div><div class="day-type">Games</div><div class="day-duration">off</div></div>
+      <div class="day-card rest"><div class="day-name">SUN</div><div class="day-type">Full Rest</div><div class="day-duration">off</div></div>
+    </div>
+
+    <div class="section-header"><span class="section-icon">🗂</span><h2>Training Modules</h2><div class="section-line"></div></div>
+
+    <div class="phase-grid">
+
+      <!-- MODULE 1 -->
+      <div class="phase-card phase-warmup">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <div class="phase-num">01</div>
+          <div class="phase-meta"><h3>ENGINE START</h3><p>DYNAMIC WARMUP &nbsp;·&nbsp; 5–6 MIN</p></div>
+          <span class="phase-badge">EVERY SESSION</span>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <table class="drill-table">
+            <thead><tr><th>DRILL</th><th>SETS / REPS</th><th>XP</th></tr></thead>
+            <tbody>
+              <tr><td><div class="drill-name">World's Greatest Stretch</div><div class="drill-why">Step into a lunge, drop the back knee, reach same-side arm to sky. Opens hips and thoracic spine before any load. Non-negotiable given his hip tightness.</div></td><td>5 each side</td><td><span class="xp-pill">+10 XP</span></td></tr>
+              <tr><td><div class="drill-name">Leg Swings — Front/Back then Side/Side</div><div class="drill-why">Dynamically warms the hip joint and begins waking up the hip flexors before sprint work starts.</div></td><td>10 each direction, each leg</td><td><span class="xp-pill">+10 XP</span></td></tr>
+              <tr><td><div class="drill-name">Ankle Alphabet</div><div class="drill-why">Sit and trace the alphabet with each foot. Sounds silly, earns big XP. Critical warmup for his tight ankles before loading them.</div></td><td>Full alphabet, each foot</td><td><span class="xp-pill">+15 XP</span></td></tr>
+              <tr><td><div class="drill-name">Bear Crawl</div><div class="drill-why">Full-body warmup that also activates core and shoulder stability needed for catching and football contact.</div></td><td>2 x 10 yards</td><td><span class="xp-pill">+15 XP</span></td></tr>
+            </tbody>
+          </table>
+          <div class="coach-note"><strong>COACH TIP</strong>Time the ankle alphabet and let him try to beat his record each week. Kids love chasing their own numbers.</div>
+        </div>
+      </div>
+
+      <!-- MODULE 2 -->
+      <div class="phase-card phase-flex">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <div class="phase-num">02</div>
+          <div class="phase-meta"><h3>UNLOCK THE JOINTS</h3><p>HIP + ANKLE + FOOT FLEXIBILITY &nbsp;·&nbsp; 10 MIN</p></div>
+          <span class="phase-badge">EVERY SESSION</span>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <table class="drill-table">
+            <thead><tr><th>STRETCH / DRILL</th><th>HOLD / REPS</th><th>XP</th></tr></thead>
+            <tbody>
+              <tr><td><div class="drill-name">Half-Kneeling Hip Flexor Stretch</div><div class="drill-why">The most important stretch in this plan. Directly targets tight, weak hip flexors. One knee on the ground, drive the hips slightly forward and hold. This is the engine upgrade.</div></td><td>30 sec each side, 2 rounds</td><td><span class="xp-pill">+20 XP</span></td></tr>
+              <tr><td><div class="drill-name">Deep Frog Squat Hold</div><div class="drill-why">Mimics his catcher's stance almost exactly. Opens the groin, inner hip, and ankles simultaneously. Tell him this is how catchers build their superpower stance.</div></td><td>3 x 20–30 sec hold</td><td><span class="xp-pill">+20 XP</span></td></tr>
+              <tr><td><div class="drill-name">Tall Kneeling Hip Shift</div><div class="drill-why">Kneeling upright, shift hips slowly side to side. Teaches the hips to move independently, directly improving cutting and lateral movement in both sports.</div></td><td>10 slow reps each direction</td><td><span class="xp-pill">+15 XP</span></td></tr>
+              <tr><td><div class="drill-name">Seated Bent-Knee Calf Stretch</div><div class="drill-why">Ankles won't loosen if the calf is locked. Bent-knee version hits the deeper soleus that limits ankle mobility and contributes to flat-foot stomping.</div></td><td>30 sec each side, 2 rounds</td><td><span class="xp-pill">+15 XP</span></td></tr>
+              <tr><td><div class="drill-name">Wall Ankle Mobilization</div><div class="drill-why">Stand one foot from a wall, drive the knee toward it while keeping the heel flat. Unlocks ankle dorsiflexion required for acceleration, jumping, and a proper midfoot strike.</div></td><td>10 reps each ankle, 2 rounds</td><td><span class="xp-pill">+20 XP</span></td></tr>
+              <tr><td>
+                <div class="drill-name">Towel Toe Curls + Short Foot <span class="new-badge">NEW</span></div>
+                <div class="drill-why">Sit barefoot, put a small towel on the floor and scrunch it with his toes. Then "dome" the arch without curling the toes (Short Foot). Builds the intrinsic foot muscles that create a springy, active landing platform instead of a dead flat stomp.</div>
+              </td><td>Towel: 3 x 10 curls. Short Foot: 3 x 10 holds (3 sec each)</td><td><span class="xp-pill">+20 XP</span></td></tr>
+            </tbody>
+          </table>
+          <div class="coach-note"><strong>FROG SQUAT RECORD</strong>Each week try to add 5 more seconds to the hold. Keep the personal record on a whiteboard. Tie the improvement to a promise: a better frog squat hold equals a faster sprint, because it is true.</div>
+        </div>
+      </div>
+
+      <!-- MODULE 3 -->
+      <div class="phase-card phase-speed">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <div class="phase-num">03</div>
+          <div class="phase-meta"><h3>SPEED PROTOCOL</h3><p>SPRINT MECHANICS + ACCELERATION &nbsp;·&nbsp; 10 MIN</p></div>
+          <span class="phase-badge">MON + FRI</span>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <table class="drill-table">
+            <thead><tr><th>DRILL</th><th>SETS / REPS</th><th>XP</th></tr></thead>
+            <tbody>
+              <tr><td><div class="drill-name">Slow-Motion High Knees (Exaggerated)</div><div class="drill-why">Go slow on purpose. Drive the knee as high as possible and lower it even slower. Recruits hip flexors that are currently underperforming. Speed comes after the pattern is locked in.</div></td><td>3 x 15 yards</td><td><span class="xp-pill">+20 XP</span></td></tr>
+              <tr><td>
+                <div class="drill-name">A-Skip with Toe Pull (Paw Drill) <span class="new-badge">NEW</span></div>
+                <div class="drill-why">On each skip, actively pull toes toward the shin before the foot hits the ground, then contact with the ball of the foot only. Exaggerate it. This drill directly rewires flat-foot stomping by forcing dorsiflexion and a quick midfoot strike as a habit before sprints start.</div>
+              </td><td>3 x 15 yards</td><td><span class="xp-pill">+25 XP</span></td></tr>
+              <tr><td><div class="drill-name">Skipping for Maximum Height</div><div class="drill-why">Builds the knee-drive and arm-swing pattern needed for sprinting. Tell him to try to touch the sky with each skip. Bigger is better.</div></td><td>3 x 20 yards</td><td><span class="xp-pill">+20 XP</span></td></tr>
+              <tr><td><div class="drill-name">Wall Drive Holds</div><div class="drill-why">Hands on wall, 45-degree body lean, one knee up. Hold 3 seconds, switch. Builds the starting position for an explosive first step that shows up in outfield jumps and defensive play.</div></td><td>3 x 5 each leg</td><td><span class="xp-pill">+15 XP</span></td></tr>
+              <tr><td><div class="drill-name">10-Yard Burst Sprints — "QUIET FEET" <span class="new-badge">CUED</span></div><div class="drill-why">Short enough that every rep is pure acceleration. Before each rep, the coaching cue is "quiet feet." Flat-foot stomping is loud — challenge him to sprint 10 yards and make it sound like nothing. Frame it as a ninja challenge. If you can hear him, he's losing speed to the ground.</div></td><td>6 x 10 yards, full effort</td><td><span class="xp-pill">+30 XP</span></td></tr>
+              <tr><td><div class="drill-name">Reaction Sprint — Coach Calls Go</div><div class="drill-why">Stand still, eyes forward. Coach calls "GO" or taps shoulder randomly. First step must be explosive. Football-ready reflex training.</div></td><td>6–8 reps, 10 yards</td><td><span class="xp-pill">+25 XP</span></td></tr>
+            </tbody>
+          </table>
+          <div class="coach-note"><strong>SPEED CHALLENGE</strong>Time his 10-yard dash every two weeks. Write it down. Film Day 1 for the before/after comparison later. Even dropping from 2.4 to 2.2 seconds is a massive gain for a 9-year-old — make sure he knows that.</div>
+        </div>
+      </div>
+
+      <!-- MODULE 4 -->
+      <div class="phase-card phase-agility">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <div class="phase-num">04</div>
+          <div class="phase-meta"><h3>AGILITY ARENA</h3><p>LATERAL QUICKNESS + DIRECTION CHANGE &nbsp;·&nbsp; 10 MIN</p></div>
+          <span class="phase-badge">WED + FRI</span>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <table class="drill-table">
+            <thead><tr><th>DRILL</th><th>SETS / REPS</th><th>XP</th></tr></thead>
+            <tbody>
+              <tr><td><div class="drill-name">Lateral Shuffle + Hop</div><div class="drill-why">5 shuffles left, plant and hop, 5 right, plant and hop. Teaches hip loading for direction changes that show up fielding ground balls and chasing football routes.</div></td><td>4 x 20 yards</td><td><span class="xp-pill">+20 XP</span></td></tr>
+              <tr><td><div class="drill-name">5-Cone Star Drill</div><div class="drill-why">4 cones in a square, 1 in the middle. Coach points to a cone — sprint there and back. Hits reaction, acceleration, and deceleration in the exact patterns needed in both sports.</div></td><td>8 timed reps, 10 sec rest</td><td><span class="xp-pill">+30 XP</span></td></tr>
+              <tr><td><div class="drill-name">Defensive Drop Step</div><div class="drill-why">Ready position. Coach points left or right. Drop that foot back and open the hips to run. Essential for reading fly balls in the outfield and playing coverage in football.</div></td><td>3 x 8 each direction</td><td><span class="xp-pill">+25 XP</span></td></tr>
+              <tr><td><div class="drill-name">Tennis Ball Drop Reaction</div><div class="drill-why">Drop a tennis ball from shoulder height. Zane catches it before the second bounce. Progress by lowering the drop height over time. Pure reflex training — catchers and receivers live by this.</div></td><td>10 reps each hand</td><td><span class="xp-pill">+20 XP</span></td></tr>
+              <tr><td>
+                <div class="drill-name">Pogo Hops <span class="new-badge">NEW</span></div>
+                <div class="drill-why">Both feet together, small quick hops in place. Goal is to spend as little time on the ground as possible. Minimal knee bend, all ankle spring. Teaches the ankle to act like a loaded spring instead of a dead weight — the exact correction for flat-foot stomping. Land soft and bounce fast.</div>
+              </td><td>3 x 20 hops</td><td><span class="xp-pill">+20 XP</span></td></tr>
+              <tr><td><div class="drill-name">Box Jump (8–12" box)</div><div class="drill-why">Two-foot takeoff, two-foot landing, stick it for 2 seconds. Builds explosive hip extension and ankle stiffness. Land soft as a cat, jump as hard as possible.</div></td><td>3 x 5 reps</td><td><span class="xp-pill">+25 XP</span></td></tr>
+            </tbody>
+          </table>
+          <div class="coach-note"><strong>BOSS FIGHT</strong>The 5-Cone Star is his weekly boss fight. Time it every session and post the record. Sub-5 seconds is elite status for a 9-year-old. Name it the Zane Star Challenge and let him chase it.</div>
+        </div>
+      </div>
+
+      <!-- MODULE 5 -->
+      <div class="phase-card phase-strength">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <div class="phase-num">05</div>
+          <div class="phase-meta"><h3>HIP POWER STATION</h3><p>HIP FLEXOR + GLUTE ACTIVATION &nbsp;·&nbsp; 8 MIN</p></div>
+          <span class="phase-badge">MON + WED</span>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <table class="drill-table">
+            <thead><tr><th>DRILL</th><th>SETS / REPS</th><th>XP</th></tr></thead>
+            <tbody>
+              <tr><td><div class="drill-name">Standing Knee Drives (Slow and Controlled)</div><div class="drill-why">Hold a wall for balance. Drive one knee to waist height as slowly as possible, lower even slower. Isolated hip flexor work at a kid-safe load. Call it slow-motion running in place.</div></td><td>3 x 12 each leg</td><td><span class="xp-pill">+20 XP</span></td></tr>
+              <tr><td><div class="drill-name">Glute Bridge with Knee Drive</div><div class="drill-why">Bridge up, hold, then drive one knee toward the chest for 2 seconds. Works the glute on the base leg and the hip flexor on the driving leg simultaneously. Two upgrades in one move.</div></td><td>3 x 10 each side</td><td><span class="xp-pill">+25 XP</span></td></tr>
+              <tr><td><div class="drill-name">Banded March in Place</div><div class="drill-why">Light resistance band at the ankles adds load to the hip flexors without joint risk. Start bodyweight for weeks 1–2, then introduce a band in week 3.</div></td><td>3 x 20 steps each leg</td><td><span class="xp-pill">+25 XP</span></td></tr>
+              <tr><td><div class="drill-name">Slow Mountain Climbers</div><div class="drill-why">Plank position, alternate driving knees on a 3-count each rep. Slower is harder and more effective for hip flexor activation than going fast. Have him count out loud.</div></td><td>3 x 10 each side</td><td><span class="xp-pill">+20 XP</span></td></tr>
+            </tbody>
+          </table>
+          <div class="coach-note"><strong>LEVEL UP MOMENT</strong>After 4 weeks, film the 10-yard sprint again and compare to Day 1. The difference in knee lift will be visible. Show him the side-by-side. That is the single most motivating thing you can do for a young athlete.</div>
+        </div>
+      </div>
+
+      <!-- MODULE 6 -->
+      <div class="phase-card phase-cooldown">
+        <div class="phase-header" onclick="togglePhase(this)">
+          <div class="phase-num">06</div>
+          <div class="phase-meta"><h3>RECOVERY PROTOCOL</h3><p>COOLDOWN + STATIC STRETCH &nbsp;·&nbsp; 5 MIN</p></div>
+          <span class="phase-badge">EVERY SESSION</span>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <table class="drill-table">
+            <thead><tr><th>STRETCH</th><th>HOLD</th><th>XP</th></tr></thead>
+            <tbody>
+              <tr><td><div class="drill-name">Figure-4 Hip Stretch (on back)</div><div class="drill-why">Lying flat, cross one ankle over the opposite knee and hug both legs in. Zero joint pressure, maximum hip opening. His cooldown MVP every session.</div></td><td>45 sec each side</td><td><span class="xp-pill">+15 XP</span></td></tr>
+              <tr><td><div class="drill-name">Standing Quad Pull</div><div class="drill-why">Passively stretches the hip flexor with a balance challenge built in. Good for ankle proprioception as a bonus.</div></td><td>30 sec each side</td><td><span class="xp-pill">+10 XP</span></td></tr>
+              <tr><td><div class="drill-name">Calf Wall Stretch (straight leg then bent)</div><div class="drill-why">20 seconds each variation each side. Directly supports ankle flexibility gains from Module 2 and the foot strike improvements from Module 3.</div></td><td>20 sec x 2 variations, each side</td><td><span class="xp-pill">+10 XP</span></td></tr>
+              <tr><td><div class="drill-name">Child's Pose</div><div class="drill-why">Decompresses the spine, relaxes the hips. Tell him he's "charging up" his stats for next session.</div></td><td>45 sec</td><td><span class="xp-pill">+10 XP</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MODULE 7 -->
+      <div class="phase-card" style="border-color:var(--border);">
+        <div class="phase-header" onclick="togglePhase(this)" style="border-left:3px solid var(--gold);">
+          <div class="phase-num" style="color:var(--gold);">07</div>
+          <div class="phase-meta"><h3>LADDER + HURDLE LAB</h3><p>FOOTWORK PRECISION + ANKLE SPRING &nbsp;·&nbsp; 10 MIN</p></div>
+          <span class="phase-badge" style="background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--gold);">WED + FRI</span>
+          <span class="phase-toggle">▼</span>
+        </div>
+        <div class="phase-body">
+          <table class="drill-table">
+            <thead><tr><th>DRILL</th><th>SETS / REPS</th><th>XP</th></tr></thead>
+            <tbody>
+              <tr><td>
+                <div class="drill-name">Ladder — Two Feet In Each Rung (Slow First)</div>
+                <div class="drill-why">Both feet land inside every rung stepping left-right-left-right. Start slow enough that every footfall is deliberate and quiet. This is the foundational pattern — don't rush it. If he's stomping through the rungs, slow down until he isn't. Speed comes in week 3+.</div>
+              </td><td>4 x full ladder length, slow build</td><td><span class="xp-pill">+20 XP</span></td></tr>
+              <tr><td>
+                <div class="drill-name">Ladder — Lateral In/Out (Side Shuffle)</div>
+                <div class="drill-why">Stand beside the ladder, step both feet in then both feet out, moving laterally down the length. Directly trains the lateral hip loading pattern for fielding and football coverage, while forcing quick light foot contacts on every step.</div>
+              </td><td>3 x full ladder, each direction</td><td><span class="xp-pill">+25 XP</span></td></tr>
+              <tr><td>
+                <div class="drill-name">Ladder — Ickey Shuffle</div>
+                <div class="drill-why">Two feet in, one foot out to the side, advance one rung, repeat. The king of coordination drills for young athletes. Goes directly into the session log as a timed "clean run" once the pattern is clean. Don't time it until the footwork is consistent — form before speed, always.</div>
+              </td><td>3 x full ladder, timed when clean</td><td><span class="xp-pill">+30 XP</span></td></tr>
+              <tr><td>
+                <div class="drill-name">Hurdle Hops — Two Foot Sequential</div>
+                <div class="drill-why">Jump over each hurdle with both feet, sticking the landing for 1 second before jumping the next. Replaces the box jump and is safer for his age — no hard edge to misjudge. Builds explosive hip extension and the ankle stiffness that directly counters flat-foot stomping.</div>
+              </td><td>3 x 5 hurdles in sequence</td><td><span class="xp-pill">+25 XP</span></td></tr>
+              <tr><td>
+                <div class="drill-name">Hurdle Hops — Single Leg (Low Hurdle Only)</div>
+                <div class="drill-why">Hop over each hurdle on one foot, landing and immediately hopping the next. One leg at a time. This is the ankle spring builder that connects directly to his pogo hop work and is the single best drill for eliminating the flat-foot pattern under load. Start with the lowest hurdle height.</div>
+              </td><td>2 x 4 hurdles each leg</td><td><span class="xp-pill">+30 XP</span></td></tr>
+              <tr><td>
+                <div class="drill-name">Ladder Sprint Out</div>
+                <div class="drill-why">Run two feet in each rung through the full ladder, then explode into a full 10-yard sprint the moment he exits the last rung. Connects the footwork precision of the ladder directly to acceleration. The contrast between controlled ladder steps and the sprint exit is the point — it teaches his nervous system to shift gears.</div>
+              </td><td>4 x full ladder + 10-yard sprint</td><td><span class="xp-pill">+25 XP</span></td></tr>
+            </tbody>
+          </table>
+          <div class="coach-note"><strong>LADDER RULE #1</strong>Quiet feet self-corrects here. If he stomps through the rungs he trips or loses rhythm. You don't need to cue it as much — the ladder punishes the stomp naturally. Your job is to slow him down until the footwork is clean, then let the speed come on its own.</div>
+          <div class="coach-note" style="margin-top:0;"><strong>PROGRESSION</strong>Weeks 1–2: two feet in each rung only, slow and clean. Week 3: add lateral in/out. Week 4: introduce ickey shuffle. Week 5+: all patterns plus timed runs and sprint-outs. Hurdle single-leg hops stay at the lowest height until he can do 4 consecutive without a stumble.</div>
+        </div>
+      </div>
+
+    </div><!-- /phase-grid -->
+
+    <div class="coach-note" style="margin-top:20px; margin-bottom:6px;">
+      <strong>FOOTBALL NOTE</strong>
+      Tackle football adds collision forces baseball doesn't. The lateral strength work and drop-step drills directly prepare him to absorb and redirect contact. His glute and hip strength are also the primary tools a ball carrier uses to break tackles. The hip flexor work in this plan is literally making him harder to bring down.
+    </div>
+    <div class="coach-note" style="margin-bottom:6px;">
+      <strong>CATCHER + OUTFIELD NOTE</strong>
+      The frog squat and hip mobility work will noticeably improve how comfortable his catcher's stance feels within 3 to 4 weeks. For outfield, the drop step and reaction sprints are the exact first two movements a center fielder makes when reading a ball off the bat.
+    </div>
+    <div class="coach-note" style="margin-bottom:6px;">
+      <strong>FLAT-FOOT NOTE</strong>
+      Tight ankles and weak hip flexors both contribute to stomping because when the ankle can't dorsiflex and the knee can't drive up, the foot falls heavy and flat. The Towel Toe Curls, A-Skip with Toe Pull, Pogo Hops, and the "quiet feet" sprint cue all target this directly. As ankle mobility improves through Module 2, the flat-foot pattern will naturally begin to correct itself on top of those additions.
+    </div>
+
+  </div><!-- /tab-plan -->
+
+  <!-- ═══════════════════ TRACKER TAB ═══════════════════ -->
+  <div id="tab-tracker" class="tab-panel">
+
+    <div class="tracker-header">
+      <div>
+        <div class="tracker-stat-val" id="totalSessions" style="color:var(--neon)">0</div>
+        <div class="tracker-stat-lbl">SESSIONS LOGGED</div>
+      </div>
+      <div>
+        <div class="tracker-stat-val" id="totalXP" style="color:var(--gold)">0</div>
+        <div class="tracker-stat-lbl">TOTAL XP</div>
+      </div>
+      <div>
+        <div class="tracker-stat-val" id="currentStreak" style="color:var(--green)">0</div>
+        <div class="tracker-stat-lbl">DAY STREAK</div>
+      </div>
+    </div>
+
+    <div class="log-session-card">
+      <h3>LOG A SESSION</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label>DATE</label>
+          <input type="date" id="sessionDate">
+        </div>
+        <div class="form-group">
+          <label>SESSION TYPE</label>
+          <select id="sessionType">
+            <option value="Speed + Flex">Monday — Speed + Flex</option>
+            <option value="Agility + Hips">Wednesday — Agility + Hips</option>
+            <option value="Game Day Prep">Friday — Game Day Prep</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>MODULES COMPLETED</label>
+      </div>
+      <div class="module-checks">
+        <div class="module-check" onclick="toggleCheck(this)" data-module="01 Engine Start" data-xp="50"><span class="check-icon">🔥</span><span class="check-label">Engine Start</span></div>
+        <div class="module-check" onclick="toggleCheck(this)" data-module="02 Unlock Joints" data-xp="90"><span class="check-icon">🔓</span><span class="check-label">Unlock Joints</span></div>
+        <div class="module-check" onclick="toggleCheck(this)" data-module="03 Speed Protocol" data-xp="115"><span class="check-icon">⚡</span><span class="check-label">Speed Protocol</span></div>
+        <div class="module-check" onclick="toggleCheck(this)" data-module="04 Agility Arena" data-xp="120"><span class="check-icon">🎯</span><span class="check-label">Agility Arena</span></div>
+        <div class="module-check" onclick="toggleCheck(this)" data-module="05 Hip Power" data-xp="90"><span class="check-icon">💪</span><span class="check-label">Hip Power</span></div>
+        <div class="module-check" onclick="toggleCheck(this)" data-module="06 Recovery" data-xp="45"><span class="check-icon">🧘</span><span class="check-label">Recovery</span></div>
+        <div class="module-check" onclick="toggleCheck(this)" data-module="07 Ladder + Hurdles" data-xp="135"><span class="check-icon">🪜</span><span class="check-label">Ladder + Hurdles</span></div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>SESSION ENERGY LEVEL</label>
+      </div>
+      <div class="rating-row" id="ratingRow">
+        <button class="rating-btn" onclick="setRating(1,this)">😴 LOW</button>
+        <button class="rating-btn" onclick="setRating(2,this)">😐 MEH</button>
+        <button class="rating-btn" onclick="setRating(3,this)">😊 GOOD</button>
+        <button class="rating-btn" onclick="setRating(4,this)">😄 GREAT</button>
+        <button class="rating-btn" onclick="setRating(5,this)">🔥 BEAST</button>
+      </div>
+
+      <div class="form-row" style="margin-top:12px;">
+        <div class="form-group">
+          <label>10-YD DASH (seconds, optional)</label>
+          <input type="number" id="pr10yd" placeholder="e.g. 2.4" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>FROG SQUAT HOLD (seconds, optional)</label>
+          <input type="number" id="prFrog" placeholder="e.g. 30">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>STAR DRILL TIME (seconds, optional)</label>
+          <input type="number" id="prStar" placeholder="e.g. 6.2" step="0.1">
+        </div>
+        <div class="form-group">
+          <label>POGO HOP COUNT (optional)</label>
+          <input type="number" id="prPogo" placeholder="e.g. 20">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>ICKEY SHUFFLE TIME (seconds, optional)</label>
+          <input type="number" id="prLadder" placeholder="e.g. 8.5" step="0.1">
+        </div>
+        <div class="form-group"></div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label>COACH NOTES</label>
+        <textarea id="sessionNotes" placeholder="What did he crush? What needs work? Any PR moments?"></textarea>
+      </div>
+
+      <button class="save-btn" onclick="saveSession()">SAVE SESSION + EARN XP</button>
+    </div>
+
+    <div class="section-header"><span class="section-icon">📋</span><h2>Session Log</h2><div class="section-line"></div></div>
+    <div id="sessionsList" class="sessions-list">
+      <div class="empty-state"><div class="empty-icon">📭</div><p>NO SESSIONS LOGGED YET</p></div>
+    </div>
+
+  </div><!-- /tab-tracker -->
+
+  <!-- ═══════════════════ PR TAB ═══════════════════ -->
+  <div id="tab-prs" class="tab-panel">
+    <div class="section-header"><span class="section-icon">⚡</span><h2>Personal Records</h2><div class="section-line"></div></div>
+    <div class="pr-grid">
+
+      <div class="pr-card neon">
+        <div class="pr-label">10-YARD DASH</div>
+        <div class="pr-value" id="pr10val">--</div>
+        <div class="pr-unit">seconds</div>
+        <div class="pr-date" id="pr10date">No record yet</div>
+        <div class="pr-input-row">
+          <input type="number" class="pr-input" id="pr10input" placeholder="2.40" step="0.01">
+          <button class="pr-save" onclick="savePR('10yd','pr10input','pr10val','pr10date','pr10hist',true)">SET PR</button>
+        </div>
+        <div class="pr-history" id="pr10hist"></div>
+      </div>
+
+      <div class="pr-card hot">
+        <div class="pr-label">5-CONE STAR DRILL</div>
+        <div class="pr-value" id="prStarval">--</div>
+        <div class="pr-unit">seconds</div>
+        <div class="pr-date" id="prStardate">No record yet</div>
+        <div class="pr-input-row">
+          <input type="number" class="pr-input" id="prStarinput" placeholder="6.2" step="0.1">
+          <button class="pr-save" onclick="savePR('star','prStarinput','prStarval','prStardate','prStarhist',true)">SET PR</button>
+        </div>
+        <div class="pr-history" id="prStarhist"></div>
+      </div>
+
+      <div class="pr-card gold">
+        <div class="pr-label">FROG SQUAT HOLD</div>
+        <div class="pr-value" id="prFrogval">--</div>
+        <div class="pr-unit">seconds</div>
+        <div class="pr-date" id="prFrogdate">No record yet</div>
+        <div class="pr-input-row">
+          <input type="number" class="pr-input" id="prFroginput" placeholder="30">
+          <button class="pr-save" onclick="savePR('frog','prFroginput','prFrogval','prFrogdate','prFroghist',false)">SET PR</button>
+        </div>
+        <div class="pr-history" id="prFroghist"></div>
+      </div>
+
+      <div class="pr-card green">
+        <div class="pr-label">POGO HOPS (consecutive)</div>
+        <div class="pr-value" id="prPogoval">--</div>
+        <div class="pr-unit">hops</div>
+        <div class="pr-date" id="prPogodate">No record yet</div>
+        <div class="pr-input-row">
+          <input type="number" class="pr-input" id="prPogoinput" placeholder="20">
+          <button class="pr-save" onclick="savePR('pogo','prPogoinput','prPogoval','prPogodate','prPogohist',false)">SET PR</button>
+        </div>
+        <div class="pr-history" id="prPogohist"></div>
+      </div>
+
+      <div class="pr-card purple">
+        <div class="pr-label">ANKLE ALPHABET</div>
+        <div class="pr-value" id="prAnkleval">--</div>
+        <div class="pr-unit">seconds</div>
+        <div class="pr-date" id="prAnkledate">No record yet</div>
+        <div class="pr-input-row">
+          <input type="number" class="pr-input" id="prAnkleinput" placeholder="45" step="0.1">
+          <button class="pr-save" onclick="savePR('ankle','prAnkleinput','prAnkleval','prAnkledate','prAnklehist',true)">SET PR</button>
+        </div>
+        <div class="pr-history" id="prAnklehist"></div>
+      </div>
+
+      <div class="pr-card" style="border-top:2px solid var(--hot);">
+        <div class="pr-label">ICKEY SHUFFLE (full ladder)</div>
+        <div class="pr-value" id="prLadderval">--</div>
+        <div class="pr-unit">seconds</div>
+        <div class="pr-date" id="prLadderdate">No record yet — log clean runs only</div>
+        <div class="pr-input-row">
+          <input type="number" class="pr-input" id="prLadderinput" placeholder="8.5" step="0.1">
+          <button class="pr-save" onclick="savePR('ladder','prLadderinput','prLadderval','prLadderdate','prLadderhist',true)">SET PR</button>
+        </div>
+        <div class="pr-history" id="prLadderhist"></div>
+      </div>
+
+    </div>
+  </div><!-- /tab-prs -->
+
+  <!-- ═══════════════════ ACHIEVEMENTS TAB ═══════════════════ -->
+  <div id="tab-achievements" class="tab-panel">
+    <div class="section-header"><span class="section-icon">🏆</span><h2>Badge Collection</h2><div class="section-line"></div></div>
+    <div class="achievement-grid" id="achievementGrid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PROGRESS TAB ═══════════════════ -->
+  <div id="tab-progress" class="tab-panel">
+    <div class="section-header"><span class="section-icon">📈</span><h2>8-Week Progression Map</h2><div class="section-line"></div></div>
+
+    <div class="week-block">
+      <div class="week-block-label" style="color:var(--neon)">WEEKS 1–2 &nbsp;·&nbsp; BUILD THE BASE</div>
+      <p>Every session opens with the full flexibility module — no shortcuts. Intensity stays low to medium. The job is to get Zane comfortable with the movement patterns before speed pressure is added. Record a 10-yard sprint and a frog squat hold on Day 1 for comparison later.</p>
+      <div class="prog-bar-wrap"><div class="prog-label"><span>INTENSITY</span><span>40%</span></div><div class="prog-bar"><div class="prog-fill" style="width:40%;background:linear-gradient(90deg,var(--neon),#0066cc)"></div></div></div>
+    </div>
+    <div class="week-block">
+      <div class="week-block-label" style="color:var(--hot)">WEEKS 3–4 &nbsp;·&nbsp; LOAD IT UP</div>
+      <p>His hips and ankles will already feel more open. Introduce a light resistance band on the hip flexor work. Add 2 sprint reps per session. Make agility drills timed and compete against previous scores. Reaction drills get faster and less predictable. The pogo hops should feel noticeably bouncier.</p>
+      <div class="prog-bar-wrap"><div class="prog-label"><span>INTENSITY</span><span>65%</span></div><div class="prog-bar"><div class="prog-fill" style="width:65%;background:linear-gradient(90deg,var(--hot),#ff3a00)"></div></div></div>
+    </div>
+    <div class="week-block">
+      <div class="week-block-label" style="color:var(--gold)">WEEKS 5–8 &nbsp;·&nbsp; GAME SPEED</div>
+      <p>Full sessions at near-game intensity. Add sport-specific elements — reading a fly ball before the drop step sprint, firing out of a linebacker stance. Introduce 20-yard sprints alongside the 10s. Do the Before vs. After video comparison and celebrate it visibly. The flat-foot stomp should be largely gone by week 6 if the mobility and pogo work has been consistent.</p>
+      <div class="prog-bar-wrap"><div class="prog-label"><span>INTENSITY</span><span>85%</span></div><div class="prog-bar"><div class="prog-fill" style="width:85%;background:linear-gradient(90deg,var(--gold),var(--hot))"></div></div></div>
+    </div>
+
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-top:6px;">
+      <div class="week-block-label" style="color:var(--purple);margin-bottom:5px;">WHAT TO LOOK FOR</div>
+      <p style="font-size:12px;opacity:0.72;line-height:1.65;">Week 2: Ankle alphabet gets faster. Frog squat hold gets longer. Week 4: Visible knee lift improvement in high knees. Sprint sound gets quieter. Week 6: Drop step opens cleanly with no hip restriction. Pogo hops sound light. Week 8: Side-by-side video comparison of Day 1 sprint vs current. Visible and dramatic difference in form, knee drive, and foot strike.</p>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<div class="toast" id="toast">SESSION SAVED!</div>
+
+<script>
+// ─── SUPABASE CONFIG ──────────────────────────────────────
+const SUPA_URL = 'https://aqnliakdjacykcedhchd.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxbmxpYWtkamFjeWtjZWRoY2hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDAzMTgsImV4cCI6MjA5MTY3NjMxOH0.8WPdRJ4UwIXdNxIP2nigggPkWSK2jm0ngs2oskX8oAs';
+
+const headers = {
+  'Content-Type': 'application/json',
+  'apikey': SUPA_KEY,
+  'Authorization': 'Bearer ' + SUPA_KEY,
+  'Prefer': 'return=representation'
+};
+
+async function sbGet(table, params='') {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${params}&order=created_at.desc`, { headers });
+  return r.json();
+}
+
+async function sbInsert(table, body) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+    method: 'POST', headers, body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+async function sbDelete(table, id) {
+  await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'DELETE', headers });
+}
+
+// ─── STATE (in-memory cache) ──────────────────────────────
+let state = {
+  sessions: [],
+  prs: { '10yd':[], star:[], frog:[], pogo:[], ankle:[], ladder:[] },
+  achievements: {}
+};
+
+async function loadAll() {
+  showToast('LOADING DATA...');
+  try {
+    const [sessions, prs, achievements] = await Promise.all([
+      sbGet('sessions', 'select=*'),
+      sbGet('personal_records', 'select=*'),
+      sbGet('achievements', 'select=*')
+    ]);
+
+    state.sessions = (sessions||[]).map(s => ({
+      id: s.id,
+      date: s.session_date,
+      type: s.session_type,
+      modules: s.modules || [],
+      xp: s.xp || 0,
+      rating: s.rating || 0,
+      notes: s.notes || '',
+      prs: s.prs || {}
+    }));
+
+    state.prs = { '10yd':[], star:[], frog:[], pogo:[], ankle:[], ladder:[] };
+    (prs||[]).forEach(p => {
+      if (state.prs[p.pr_key]) {
+        state.prs[p.pr_key].push({ id: p.id, val: parseFloat(p.val), date: p.recorded_date });
+      }
+    });
+    // sort each PR list by recorded_date ascending
+    Object.keys(state.prs).forEach(k => {
+      state.prs[k].sort((a,b) => new Date(a.date)-new Date(b.date));
+    });
+
+    state.achievements = {};
+    (achievements||[]).forEach(a => {
+      state.achievements[a.achievement_id] = a.earned_date;
+    });
+
+    updateStats();
+    renderSessions();
+    renderPRs();
+    renderAchievements();
+    showToast('LOADED!');
+  } catch(e) {
+    showToast('LOAD ERROR — CHECK CONNECTION');
+    console.error(e);
+  }
+}
+
+// ─── TABS ─────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if (id==='tracker') renderSessions();
+  if (id==='prs') renderPRs();
+  if (id==='achievements') renderAchievements();
+}
+
+// ─── PHASES ──────────────────────────────────────────────
+function togglePhase(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.phase-toggle');
+  const isOpen = body.classList.contains('open');
+  document.querySelectorAll('.phase-body.open').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.phase-toggle.open').forEach(t => t.classList.remove('open'));
+  if (!isOpen) { body.classList.add('open'); toggle.classList.add('open'); }
+}
+
+// ─── MODULE CHECKS ───────────────────────────────────────
+function toggleCheck(el) { el.classList.toggle('checked'); }
+
+// ─── RATING ───────────────────────────────────────────────
+let currentRating = 0;
+function setRating(val, btn) {
+  currentRating = val;
+  document.querySelectorAll('.rating-btn').forEach((b,i) => {
+    b.className = 'rating-btn';
+    if (i < val) b.classList.add('selected-'+val);
+  });
+}
+
+// ─── SAVE SESSION ─────────────────────────────────────────
+async function saveSession() {
+  const date = document.getElementById('sessionDate').value;
+  const type = document.getElementById('sessionType').value;
+  if (!date) { alert('Please pick a date.'); return; }
+
+  const checked = [...document.querySelectorAll('.module-check.checked')];
+  const modules = checked.map(c => c.dataset.module);
+  const xp = checked.reduce((sum, c) => sum + parseInt(c.dataset.xp), 0);
+  const notes = document.getElementById('sessionNotes').value.trim();
+  const prs = {};
+  const v10 = document.getElementById('pr10yd').value;
+  const vFrog = document.getElementById('prFrog').value;
+  const vStar = document.getElementById('prStar').value;
+  const vPogo = document.getElementById('prPogo').value;
+  const vLadder = document.getElementById('prLadder').value;
+  if (v10) prs['10-Yard Dash'] = v10 + 's';
+  if (vFrog) prs['Frog Squat'] = vFrog + 's';
+  if (vStar) prs['Star Drill'] = vStar + 's';
+  if (vPogo) prs['Pogo Hops'] = vPogo + ' hops';
+  if (vLadder) prs['Ickey Shuffle'] = vLadder + 's';
+
+  showToast('SAVING...');
+  try {
+    // Save session
+    const [saved] = await sbInsert('sessions', {
+      session_date: date,
+      session_type: type,
+      modules,
+      xp,
+      rating: currentRating,
+      notes,
+      prs
+    });
+
+    state.sessions.unshift({
+      id: saved.id, date, type, modules, xp, rating: currentRating, notes, prs
+    });
+
+    // Auto-save PRs
+    const prEntries = [
+      { key:'10yd', val:v10, lower:true },
+      { key:'frog', val:vFrog, lower:false },
+      { key:'star', val:vStar, lower:true },
+      { key:'pogo', val:vPogo, lower:false },
+      { key:'ladder', val:vLadder, lower:true }
+    ];
+    for (const e of prEntries) {
+      if (!e.val) continue;
+      await autoSavePR(e.key, parseFloat(e.val), date, e.lower);
+    }
+
+    await checkAchievements();
+    updateStats();
+    renderSessions();
+    renderPRs();
+    resetForm();
+    showToast('SESSION SAVED! +' + xp + ' XP');
+  } catch(err) {
+    showToast('SAVE ERROR');
+    console.error(err);
+  }
+}
+
+async function autoSavePR(key, val, date, lowerIsBetter) {
+  const hist = state.prs[key] || [];
+  const best = hist.length > 0
+    ? (lowerIsBetter ? Math.min(...hist.map(h=>h.val)) : Math.max(...hist.map(h=>h.val)))
+    : null;
+  const isPR = best === null || (lowerIsBetter ? val < best : val > best);
+  if (isPR) {
+    const [saved] = await sbInsert('personal_records', {
+      pr_key: key, val, recorded_date: date
+    });
+    if (!state.prs[key]) state.prs[key] = [];
+    state.prs[key].push({ id: saved.id, val, date });
+  }
+}
+
+function resetForm() {
+  document.getElementById('sessionDate').value = '';
+  document.getElementById('sessionNotes').value = '';
+  document.getElementById('pr10yd').value = '';
+  document.getElementById('prFrog').value = '';
+  document.getElementById('prStar').value = '';
+  document.getElementById('prPogo').value = '';
+  document.getElementById('prLadder').value = '';
+  document.querySelectorAll('.module-check').forEach(c => c.classList.remove('checked'));
+  document.querySelectorAll('.rating-btn').forEach(b => b.className = 'rating-btn');
+  currentRating = 0;
+}
+
+// ─── RENDER SESSIONS ─────────────────────────────────────
+const typeColors = {
+  'Speed + Flex': 'rgba(0,245,255,0.15); border-color:var(--neon); color:var(--neon)',
+  'Agility + Hips': 'rgba(255,107,53,0.15); border-color:var(--hot); color:var(--hot)',
+  'Game Day Prep': 'rgba(255,215,0,0.15); border-color:var(--gold); color:var(--gold)'
+};
+const ratingEmoji = ['','😴','😐','😊','😄','🔥'];
+
+function renderSessions() {
+  const el = document.getElementById('sessionsList');
+  if (!state.sessions.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>NO SESSIONS LOGGED YET</p></div>';
+    return;
+  }
+  el.innerHTML = state.sessions.map(s => {
+    const d = new Date(s.date + 'T12:00:00');
+    const day = d.getDate();
+    const month = d.toLocaleString('default',{month:'short'}).toUpperCase();
+    const tc = typeColors[s.type] || 'rgba(255,255,255,0.1); border-color:var(--border); color:var(--text)';
+    const prHtml = Object.entries(s.prs||{}).map(([k,v])=>`<span class="session-pr">${k}: ${v}</span>`).join('');
+    return `<div class="session-entry">
+      <div class="session-date-block">
+        <div class="session-date-day">${day}</div>
+        <div class="session-date-month">${month}</div>
+      </div>
+      <div>
+        <span class="session-type-tag" style="background:${tc}">${s.type}</span>
+        <div class="session-modules">${s.modules&&s.modules.length ? s.modules.join(' · ') : 'No modules recorded'}</div>
+        ${s.notes ? `<div class="session-notes-text">"${s.notes}"</div>` : ''}
+        ${prHtml ? `<div class="session-pr-row">${prHtml}</div>` : ''}
+        <div class="session-xp">+${s.xp} XP</div>
+      </div>
+      <div style="text-align:center">
+        <div class="session-rating">${ratingEmoji[s.rating]||'—'}</div>
+        <button class="delete-btn" onclick="deleteSession(${s.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteSession(id) {
+  if (!confirm('Remove this session?')) return;
+  await sbDelete('sessions', id);
+  state.sessions = state.sessions.filter(s => s.id !== id);
+  updateStats();
+  renderSessions();
+}
+
+// ─── STATS ────────────────────────────────────────────────
+const levelTitles = ['','ROOKIE','PROSPECT','VARSITY','ELITE','LEGEND'];
+function updateStats() {
+  const total = state.sessions.length;
+  const xp = state.sessions.reduce((s,se) => s+(se.xp||0), 0);
+  document.getElementById('totalSessions').textContent = total;
+  document.getElementById('totalXP').textContent = xp;
+
+  const dates = [...new Set(state.sessions.map(s=>s.date))].sort().reverse();
+  let streak = 0;
+  const today = new Date(); today.setHours(0,0,0,0);
+  for (let i=0; i<dates.length; i++) {
+    const d = new Date(dates[i]+'T12:00:00'); d.setHours(0,0,0,0);
+    const diff = Math.round((today-d)/(1000*60*60*24));
+    if (diff === i || diff === i+1) streak++;
+    else break;
+  }
+  document.getElementById('currentStreak').textContent = streak;
+
+  const lvl = Math.min(5, Math.floor(xp/500)+1);
+  document.getElementById('levelNum').textContent = lvl;
+  document.getElementById('levelTitle').textContent = levelTitles[lvl]||'LEGEND';
+}
+
+// ─── PRs ─────────────────────────────────────────────────
+async function savePR(key, inputId, valId, dateId, histId, lowerIsBetter) {
+  const v = parseFloat(document.getElementById(inputId).value);
+  if (isNaN(v)) return;
+  const date = new Date().toISOString().split('T')[0];
+  const displayDate = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  try {
+    const [saved] = await sbInsert('personal_records', { pr_key: key, val: v, recorded_date: date });
+    if (!state.prs[key]) state.prs[key] = [];
+    state.prs[key].push({ id: saved.id, val: v, date: displayDate });
+    renderPRs();
+    showToast('PR SAVED!');
+  } catch(e) {
+    showToast('SAVE ERROR');
+  }
+}
+
+function renderPRs() {
+  const cfg = {
+    '10yd': { valId:'pr10val', dateId:'pr10date', histId:'pr10hist', lowerIsBetter:true },
+    'star':  { valId:'prStarval', dateId:'prStardate', histId:'prStarhist', lowerIsBetter:true },
+    'frog':  { valId:'prFrogval', dateId:'prFrogdate', histId:'prFroghist', lowerIsBetter:false },
+    'pogo':  { valId:'prPogoval', dateId:'prPogodate', histId:'prPogohist', lowerIsBetter:false },
+    'ankle': { valId:'prAnkleval', dateId:'prAnkledate', histId:'prAnklehist', lowerIsBetter:true },
+    'ladder':{ valId:'prLadderval', dateId:'prLadderdate', histId:'prLadderhist', lowerIsBetter:true }
+  };
+  for (const [key, c] of Object.entries(cfg)) {
+    const hist = state.prs[key] || [];
+    if (!hist.length) continue;
+    const sorted = [...hist].sort((a,b) => c.lowerIsBetter ? a.val-b.val : b.val-a.val);
+    const best = sorted[0];
+    document.getElementById(c.valId).textContent = best.val;
+    document.getElementById(c.dateId).textContent = 'Best: ' + best.date;
+    const histEl = document.getElementById(c.histId);
+    const recent = [...hist].reverse().slice(0,4);
+    histEl.innerHTML = recent.map(r=>`<div class="pr-history-row"><span>${r.date}</span><span>${r.val}</span></div>`).join('');
+  }
+}
+
+// ─── ACHIEVEMENTS ────────────────────────────────────────
+const ACHIEVEMENTS = [
+  { id:'streak3',      icon:'🔥', name:'3-SESSION STREAK',  desc:'Complete 3 sessions in a row',               check: s => getStreak(s) >= 3 },
+  { id:'frogMaster',   icon:'🐸', name:'FROG MASTER',        desc:'Hold frog squat for 60+ seconds',            check: s => (s.prs.frog||[]).some(p=>p.val>=60) },
+  { id:'speedUpgrade', icon:'⚡', name:'SPEED UPGRADE',      desc:'Beat your 10-yard dash PR',                  check: s => (s.prs['10yd']||[]).length >= 2 },
+  { id:'starSlayer',   icon:'🎯', name:'STAR SLAYER',        desc:'5-Cone Star Drill under 6 seconds',          check: s => (s.prs.star||[]).some(p=>p.val<6) },
+  { id:'quietFeet',    icon:'🥷', name:'NINJA FEET',         desc:'Quiet feet cue in 3 session notes',          check: s => s.sessions.filter(se=>se.notes&&se.notes.toLowerCase().includes('quiet')).length>=3 },
+  { id:'footballReady',icon:'🏈', name:'FOOTBALL READY',     desc:'Complete all 7 modules in one session',      check: s => s.sessions.some(se=>(se.modules||[]).length>=7) },
+  { id:'warrior4',     icon:'🌟', name:'4-WEEK WARRIOR',     desc:'Log 12 total sessions',                      check: s => s.sessions.length>=12 },
+  { id:'beforeAfter',  icon:'🎬', name:'BEFORE VS AFTER',    desc:'Log 20 total sessions',                      check: s => s.sessions.length>=20 },
+  { id:'pogoKing',     icon:'🦘', name:'POGO KING',          desc:'30+ consecutive pogo hops',                  check: s => (s.prs.pogo||[]).some(p=>p.val>=30) },
+  { id:'ladderFirst',  icon:'🪜', name:'LADDER UNLOCKED',    desc:'Complete Module 7 for the first time',       check: s => s.sessions.some(se=>(se.modules||[]).includes('07 Ladder + Hurdles')) },
+  { id:'ladderClean',  icon:'🏃', name:'CLEAN SWEEP',        desc:'Log a clean Ickey Shuffle PR',               check: s => (s.prs.ladder||[]).length >= 1 },
+  { id:'legend',       icon:'👑', name:'SPEED LEGEND',       desc:'Reach 5,000 total XP',                       check: s => s.sessions.reduce((t,se)=>t+(se.xp||0),0)>=5000 },
+];
+
+function getStreak(s) {
+  const dates = [...new Set(s.sessions.map(se=>se.date))].sort().reverse();
+  const today = new Date(); today.setHours(0,0,0,0);
+  let streak = 0;
+  for (let i=0; i<dates.length; i++) {
+    const d = new Date(dates[i]+'T12:00:00'); d.setHours(0,0,0,0);
+    const diff = Math.round((today-d)/(1000*60*60*24));
+    if (diff===i||diff===i+1) streak++;
+    else break;
+  }
+  return streak;
+}
+
+async function checkAchievements() {
+  for (const a of ACHIEVEMENTS) {
+    if (!state.achievements[a.id] && a.check(state)) {
+      const earned = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      try {
+        await sbInsert('achievements', { achievement_id: a.id, earned_date: earned });
+        state.achievements[a.id] = earned;
+      } catch(e) { /* already exists, ignore */ }
+    }
+  }
+  renderAchievements();
+}
+
+function renderAchievements() {
+  const grid = document.getElementById('achievementGrid');
+  grid.innerHTML = ACHIEVEMENTS.map(a => {
+    const unlocked = !!state.achievements[a.id];
+    return `<div class="achievement ${unlocked?'unlocked':''}" title="${unlocked?'Unlocked '+state.achievements[a.id]:'Locked'}">
+      <div class="achievement-icon">${a.icon}</div>
+      <div>
+        <div class="achievement-name">${a.name}</div>
+        <div class="achievement-desc">${a.desc}</div>
+        ${unlocked ? `<div class="achievement-unlocked-date">EARNED ${state.achievements[a.id]}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── TOAST ───────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+document.getElementById('sessionDate').valueAsDate = new Date();
+document.querySelector('.phase-header').click();
+loadAll();
+</script>
+</body>
+</html>
