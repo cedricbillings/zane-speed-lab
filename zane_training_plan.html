@@ -237,8 +237,18 @@
   .session-pr-row { display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; }
   .session-pr { background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.25); border-radius:6px; padding:2px 8px; font-size:10px; color:var(--gold); }
 
-  .delete-btn { background:none; border:none; color:rgba(255,255,255,0.15); cursor:pointer; font-size:14px; padding:2px 4px; transition:color 0.2s; margin-left:4px; }
-  .delete-btn:hover { color:#ff4444; }
+  .delete-btn {
+    background:rgba(255,68,68,0.1); border:1px solid rgba(255,68,68,0.3);
+    color:#ff4444; cursor:pointer; font-size:11px; padding:6px 10px;
+    border-radius:8px; transition:all 0.2s; margin-left:4px;
+    font-family:'Orbitron',monospace; letter-spacing:1px; white-space:nowrap;
+  }
+  .delete-btn:hover { background:rgba(255,68,68,0.25); }
+
+  .save-btn:disabled {
+    opacity:0.4; cursor:not-allowed; transform:none !important;
+    box-shadow:none !important;
+  }
 
   /* PR TRACKER TAB */
   .pr-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:20px; }
@@ -707,7 +717,7 @@
         <textarea id="sessionNotes" placeholder="What did he crush? What needs work? Any PR moments?"></textarea>
       </div>
 
-      <button class="save-btn" onclick="saveSession()">SAVE SESSION + EARN XP</button>
+      <button class="save-btn" id="saveBtn" onclick="saveSession()">SAVE SESSION + EARN XP</button>
     </div>
 
     <div class="section-header"><span class="section-icon">📋</span><h2>Session Log</h2><div class="section-line"></div></div>
@@ -957,9 +967,14 @@ function setRating(val, btn) {
 
 // ─── SAVE SESSION ─────────────────────────────────────────
 async function saveSession() {
+  const btn = document.getElementById('saveBtn');
   const date = document.getElementById('sessionDate').value;
   const type = document.getElementById('sessionType').value;
   if (!date) { alert('Please pick a date.'); return; }
+
+  // Disable button immediately to prevent double-tap
+  btn.disabled = true;
+  btn.textContent = 'SAVING...';
 
   const checked = [...document.querySelectorAll('.module-check.checked')];
   const modules = checked.map(c => c.dataset.module);
@@ -1012,8 +1027,12 @@ async function saveSession() {
     renderSessions();
     renderPRs();
     resetForm();
+    btn.disabled = false;
+    btn.textContent = 'SAVE SESSION + EARN XP';
     showToast('SESSION SAVED! +' + xp + ' XP');
   } catch(err) {
+    btn.disabled = false;
+    btn.textContent = 'SAVE SESSION + EARN XP';
     showToast('SAVE ERROR');
     console.error(err);
   }
@@ -1081,7 +1100,7 @@ function renderSessions() {
       </div>
       <div style="text-align:center">
         <div class="session-rating">${ratingEmoji[s.rating]||'—'}</div>
-        <button class="delete-btn" onclick="deleteSession(${s.id})">✕</button>
+        <button class="delete-btn" onclick="deleteSession(${s.id})">DELETE</button>
       </div>
     </div>`;
   }).join('');
